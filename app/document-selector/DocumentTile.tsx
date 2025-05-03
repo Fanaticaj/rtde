@@ -20,7 +20,7 @@ export default function DocumentTile({
       id: ""
     }
     console.log("Delete:",{id});
-    client.models.Document.delete(todelete);
+    client.models.Document.delete({todelete},{authMode='apiKey'});
   }
   return (
     <div className={styles.tile}>
