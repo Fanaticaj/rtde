@@ -6,7 +6,7 @@ const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
 
 // Get the DynamoDB table name from environment variables
-const tableName = process.env.DOCUMENT_TABLE_NAME || "Document-fj4xbe6gh5tgrgcz7vudjfu-NONE";
+const tableName = process.env.DOCUMENT_TABLE_NAME || "Document-vnyciacn2nca3b6znjb4pulud4-NONE";
 
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   console.log("Event received:", JSON.stringify(event, null, 2));
