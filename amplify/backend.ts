@@ -1,8 +1,14 @@
-import { defineBackend } from '@aws-amplify/backend';
-import { auth } from './auth/resource.js';
-import { data } from './data/resource.js';
+import { defineBackend } from "@aws-amplify/backend";
+import { auth } from "./auth/resource";
+import { data } from "./data/resource";
+import { deleteDocument } from "./functions/deleteDocument/resource";
+import { downloadDocument } from "./functions/downloadDocument/resource";
+import { fetchDocuments } from "./functions/fetchDocuments/resource";
 
 defineBackend({
   auth,
   data,
+  deleteDocument,
+  downloadDocument,
+  fetchDocuments
 });
