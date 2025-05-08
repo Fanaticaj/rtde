@@ -117,6 +117,10 @@ a:hover {
   display: flex;
   justify-content: center;
   align-items: center;
+  display: inline-grid;
+  grid-template-columns: auto auto auto;
+  overflow: auto;
+  gap: 1%
 }
 
 .text-control textarea {

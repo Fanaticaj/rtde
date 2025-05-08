@@ -1,4 +1,4 @@
-1. install aws cli and terraform
+*1. install aws cli and terraform
 
 2. run aws configure and set up keys to authenticate
 

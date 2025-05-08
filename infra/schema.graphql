@@ -1,0 +1,23 @@
+type Document {
+  id: ID!
+  title: String
+  content: String!
+  updatedAt: AWSDateTime!
+}
+
+type DocumentDownloadPayload {
+  document: Document!
+  content: String!
+  title: String!
+}
+
+type Query {
+  # list all documents
+  fetchDocuments: [Document!]!
+}
+
+type Mutation {
+  deleteDocument(id: ID!): Document
+  downloadDocument(id: ID!): DocumentDownloadPayload
+  fetchDocuments: [Document]
+}

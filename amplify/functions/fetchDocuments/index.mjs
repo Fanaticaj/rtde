@@ -7,7 +7,7 @@ const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
 
 // Get the DynamoDB table name from environment variables
-const tableName = process.env.DOCUMENT_TABLE_NAME;
+const tableName = "Document-nu434abnqjhf3kcbgxbcibzamu-NONE";
 
 export const handler = async (event) => {
   console.log("Event received:", JSON.stringify(event, null, 2));
