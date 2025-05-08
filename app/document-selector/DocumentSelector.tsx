@@ -25,34 +25,39 @@ export default function DocumentSelector({ signOut }: DocumentSelectorProps) {
   const [loading, setLoading] = useState(false);
   
   const fetchDocuments = async () => {
-    // setLoading(true);
-    // try {
-    //   const response = await handler(event);
-    //   const data = await response.body;
-    //   //setDocuments(data);
-    //   console.log(data);
-    // } catch (error) {
-    //   console.error("Failed to fetch documents:", error);
-    // } finally {
-    //   setLoading(false);
-    // }
-    const {data} = await client.models.Document.list();
-    let docs:Document[]=[];
-    for (const d of data){
-      var str:string;
-      str = d.title || "";
-      var temp: Document = {title: str, id: d.id, createdAt: d.createdAt, updatedAt: d.updatedAt};
-      docs.push(temp)
+    setLoading(true);
+    try {
+      const response = await fetch('/api/documents');
+      const data = await response.json();
+      if (data && data.documents) {
+        setDocuments(data.documents);
+      }
+      console.log("Fetched documents:", data);
+    } catch (error) {
+      console.error("Failed to fetch documents:", error);
+    } finally {
+      setLoading(false);
     }
-    console.log(docs);
-    setDocuments(docs);
-
   };
-
+  
   const createDocument = async () => {
-    const str = window.prompt("Create New Document");
-    if(str != null){
-      client.models.Document.create({title: str,});
+    const title = window.prompt("Create New Document");
+    if (title) {
+      try {
+        const response = await fetch('/api/documents', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ title }),
+        });
+        
+        if (response.ok) {
+          fetchDocuments(); // Refresh the list
+        }
+      } catch (error) {
+        console.error("Failed to create document:", error);
+      }
     }
   };
 
