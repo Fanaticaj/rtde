@@ -1,13 +1,15 @@
 provider "aws" {
+
+    #Set region if this is different
   region = "us-east-1"
 }
 
-# Basic GuardDuty detector for Amplify
+#guard duty
 resource "aws_guardduty_detector" "main" {
   enable = true
 }
 
-# WAF with enhanced rules
+#WAF
 resource "aws_wafv2_web_acl" "amplify_acl" {
   name        = "amplify-waf"
   description = "WAF for Amplify CloudFront"
@@ -23,7 +25,6 @@ resource "aws_wafv2_web_acl" "amplify_acl" {
     sampled_requests_enabled   = true
   }
 
-  # Common rule set
   rule {
     name     = "AWS-AWSManagedRulesCommonRuleSet"
     priority = 1
@@ -46,7 +47,6 @@ resource "aws_wafv2_web_acl" "amplify_acl" {
     }
   }
 
-  # SQL Injection protection
   rule {
     name     = "AWS-AWSManagedRulesSQLiRuleSet"
     priority = 2
@@ -69,7 +69,6 @@ resource "aws_wafv2_web_acl" "amplify_acl" {
     }
   }
 
-  # Rate limiting rule
   rule {
     name     = "RateLimit"
     priority = 3
@@ -92,7 +91,6 @@ resource "aws_wafv2_web_acl" "amplify_acl" {
     }
   }
 
-  # IP reputation rule
   rule {
     name     = "AWS-AWSManagedRulesAmazonIpReputationList"
     priority = 4
@@ -119,13 +117,11 @@ resource "aws_wafv2_web_acl" "amplify_acl" {
 # AWS Shield Advanced
 # resource "aws_shield_protection" "amplify_protection" {
 #   name         = "amplify-shield-protection"
-#   resource_arn = data.aws_amplify_app.app.arn
-
+#   resource_arn = "<YOUR_AMPLIFY_APP_ARN>"
+#
 #   tags = {
 #     Environment = "Production"
 #   }
 # }
 
-data "aws_amplify_app" "app" {
-  app_id = "<YOUR_AMPLIFY_APP_ID>"
-}
+# Removed unsupported data source for aws_amplify_app
