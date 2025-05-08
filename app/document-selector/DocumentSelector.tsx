@@ -2,6 +2,10 @@
 
 import { useState, useEffect } from "react";
 import DocumentTile from "./DocumentTile";
+import Editor from "../editor/page";
+import { generateClient } from "aws-amplify/data";
+import type {Schema} from "../../amplify/data/resource";
+import { ModelField, Nullable } from "@aws-amplify/data-schema";
 
 interface Document {
   id: string;
@@ -14,37 +18,41 @@ interface DocumentSelectorProps {
   signOut?: () => void;
 }
 
+const client = generateClient<Schema>();
+
 export default function DocumentSelector({ signOut }: DocumentSelectorProps) {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(false);
-
+  
   const fetchDocuments = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch("/api/fetchDocuments");
-      const data = await response.json();
-      setDocuments(data);
-    } catch (error) {
-      console.error("Failed to fetch documents:", error);
-    } finally {
-      setLoading(false);
+    // setLoading(true);
+    // try {
+    //   const response = await handler(event);
+    //   const data = await response.body;
+    //   //setDocuments(data);
+    //   console.log(data);
+    // } catch (error) {
+    //   console.error("Failed to fetch documents:", error);
+    // } finally {
+    //   setLoading(false);
+    // }
+    const {data} = await client.models.Document.list();
+    let docs:Document[]=[];
+    for (const d of data){
+      var str:string;
+      str = d.title || "";
+      var temp: Document = {title: str, id: d.id, createdAt: d.createdAt, updatedAt: d.updatedAt};
+      docs.push(temp)
     }
+    console.log(docs);
+    setDocuments(docs);
+
   };
 
   const createDocument = async () => {
-    const title = prompt("Enter a title for the new document:");
-    if (!title) return;
-
-    try {
-      const response = await fetch("/api/createDocument", {
-        method: "POST",
-        body: JSON.stringify({ title }),
-      });
-
-      const newDoc = await response.json();
-      window.location.href = `/editor?docId=${newDoc.id}`;
-    } catch (error) {
-      console.error("Failed to create document:", error);
+    const str = window.prompt("Create New Document");
+    if(str != null){
+      client.models.Document.create({title: str,});
     }
   };
 
@@ -82,6 +90,7 @@ export default function DocumentSelector({ signOut }: DocumentSelectorProps) {
               />
             ))
           )}
+          
         </div>
       </div>
     </div>

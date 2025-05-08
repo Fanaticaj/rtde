@@ -7,7 +7,7 @@ const schema = a.schema({
       content: a.string(),
     })
     .authorization((allow) => [allow.authenticated()]), // or add allow.apiKey() here if needed
-});
+  });
 
 export const data = defineData({
   schema, // ✅ This now has a value

@@ -1,5 +1,4 @@
-// AWS Lambda function that retrieves all documents from DynamoDB using a scan operation, making them available for your frontend to display
-// Runtime: Node.js 22.x
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, ScanCommand } from "@aws-sdk/lib-dynamodb";
 
@@ -7,9 +6,9 @@ const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
 
 // Get the DynamoDB table name from environment variables
-const tableName = "Document-nu434abnqjhf3kcbgxbcibzamu-NONE";
+const tableName = process.env.DOCUMENT_TABLE_NAME || "Document-vnyciacn2nca3b6znjb4pulud4-NONE";
 
-export const handler = async (event) => {
+export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   console.log("Event received:", JSON.stringify(event, null, 2));
   
   try {
@@ -34,7 +33,7 @@ export const handler = async (event) => {
         count: scanResponse.Count || 0
       })
     };
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error fetching documents:", error);
     return {
       statusCode: 500,
@@ -46,7 +45,7 @@ export const handler = async (event) => {
       },
       body: JSON.stringify({ 
         error: "Failed to fetch documents", 
-        details: error.message 
+        details: error instanceof Error ? error.message : 'Unknown error' 
       })
     };
   }
