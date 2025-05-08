@@ -4,57 +4,63 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const apiEndpoint = process.env.LAMBDA_ENDPOINT;
+  // Get basic information for debugging
   const id = params.id;
+  const apiEndpoint = process.env.NEXT_PUBLIC_LAMBDA_ENDPOINT;
+  const url = apiEndpoint ? `${apiEndpoint}/documents/${id}` : "No API endpoint configured";
   
-  try {
-    const response = await fetch(`${apiEndpoint}/documents/${id}`);
-    
-    if (!response.ok) {
-      // If document not found, return 404
-      if (response.status === 404) {
-        return NextResponse.json(
-          { error: "Document not found" }, 
-          { status: 404 }
-        );
-      }
-      throw new Error(`HTTP error! status: ${response.status}`);
+  // Create environment variables object with proper typing
+  const envVars: Record<string, string | undefined> = {};
+  Object.keys(process.env)
+    .filter(key => key.startsWith('NEXT_') || key.startsWith('LAMBDA_'))
+    .forEach(key => {
+      envVars[key] = process.env[key];
+    });
+  
+  // Return a simple success response with debug information
+  return NextResponse.json({
+    message: "API route is functioning correctly",
+    debug_info: {
+      id: id,
+      timestamp: new Date().toISOString(),
+      api_endpoint_configured: !!apiEndpoint,
+      api_endpoint_value: apiEndpoint || "NOT SET",
+      request_url: url,
+      env_vars: envVars
     }
-    
-    const data = await response.json();
-    return NextResponse.json(data);
-  } catch (error) {
-    console.error(`Error fetching document ${id}:`, error);
-    return NextResponse.json(
-      { error: "Failed to fetch document" }, 
-      { status: 500 }
-    );
-  }
+  });
 }
 
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const apiEndpoint = process.env.LAMBDA_ENDPOINT;
-  const id = params.id;
-  
+  // Similar simplified response for DELETE
+  return NextResponse.json({
+    message: "DELETE route is functioning correctly",
+    id: params.id,
+    api_endpoint: process.env.NEXT_PUBLIC_LAMBDA_ENDPOINT || "NOT SET"
+  });
+}
+
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  // Get request body for PUT
+  let body = null;
   try {
-    const response = await fetch(`${apiEndpoint}/documents/${id}`, {
-      method: "DELETE"
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    return NextResponse.json(data);
+    body = await request.json();
   } catch (error) {
-    console.error(`Error deleting document ${id}:`, error);
-    return NextResponse.json(
-      { error: "Failed to delete document" }, 
-      { status: 500 }
-    );
+    // If body parsing fails, just note it
+    body = "Failed to parse request body";
   }
+  
+  // Return simple success response with debug info
+  return NextResponse.json({
+    message: "PUT route is functioning correctly",
+    id: params.id,
+    api_endpoint: process.env.NEXT_PUBLIC_LAMBDA_ENDPOINT || "NOT SET",
+    received_body: body
+  });
 }

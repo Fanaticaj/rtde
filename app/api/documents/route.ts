@@ -1,51 +1,38 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET() {
-  const apiEndpoint = process.env.LAMBDA_ENDPOINT;
+  const apiEndpoint = process.env.NEXT_PUBLIC_LAMBDA_ENDPOINT;
   
-  try {
-    const response = await fetch(`${apiEndpoint}/documents`);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+  // Create environment variables object with proper typing
+  const envVars: Record<string, string | undefined> = {};
+  Object.keys(process.env)
+    .filter(key => key.startsWith('NEXT_') || key.startsWith('LAMBDA_'))
+    .forEach(key => {
+      envVars[key] = process.env[key];
+    });
+  
+  return NextResponse.json({
+    message: "Documents list API route is functioning correctly",
+    debug_info: {
+      timestamp: new Date().toISOString(),
+      api_endpoint_configured: !!apiEndpoint,
+      api_endpoint_value: apiEndpoint || "NOT SET",
+      env_vars: envVars
     }
-    
-    const data = await response.json();
-    return NextResponse.json(data);
-  } catch (error) {
-    console.error("Error fetching documents:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch documents" }, 
-      { status: 500 }
-    );
-  }
+  });
 }
 
 export async function POST(request: NextRequest) {
-  const apiEndpoint = process.env.LAMBDA_ENDPOINT;
-  
+  let body = null;
   try {
-    const body = await request.json();
-    
-    const response = await fetch(`${apiEndpoint}/documents`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    return NextResponse.json(data);
+    body = await request.json();
   } catch (error) {
-    console.error("Error creating document:", error);
-    return NextResponse.json(
-      { error: "Failed to create document" }, 
-      { status: 500 }
-    );
+    body = "Failed to parse request body";
   }
+  
+  return NextResponse.json({
+    message: "POST route is functioning correctly",
+    api_endpoint: process.env.NEXT_PUBLIC_LAMBDA_ENDPOINT || "NOT SET",
+    received_body: body
+  });
 }
