@@ -30,7 +30,7 @@ const Editor: FC = () => {
     docId = "5416c8be-7c41-4ea2-b6ce-22b0e3c19634";
   }
   
-  console.log("Document ID:", docId);
+  console.log("🔍 Editor - Document ID:", docId);
 
   const [content, setContent] = useState<string>("");
   const [title, setTitle] = useState<string>("");
@@ -39,30 +39,76 @@ const Editor: FC = () => {
   const [underline, setUnderline] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<any>(null);
   const saveTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  // Check if the API routes are working
+  const checkApiRoutes = async () => {
+    try {
+      console.log("🔍 Testing API route connection...");
+      const response = await fetch(`/api/documents/test`);
+      const data = await response.json();
+      console.log("🔍 API route response:", data);
+      setDebugInfo(data);
+      return true;
+    } catch (error) {
+      console.error("🔍 API route test failed:", error);
+      setDebugInfo({ error: String(error) });
+      return false;
+    }
+  };
 
   // Function to fetch document using API route
   const fetchDocument = async () => {
+    console.log(`🔍 Fetching document with ID: ${docId}`);
+    
     try {
       setLoading(true);
+      // First check if our API routes are working
+      const apiRoutesWorking = await checkApiRoutes();
+      
+      // If API routes are working, try to fetch the actual document
       const response = await fetch(`/api/documents/${docId}`);
+      console.log(`🔍 Fetch response status: ${response.status}`);
       
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Error response:", errorData);
-        throw new Error(`Error: ${response.status} - ${errorData.error || "Unknown error"}`);
+        let errorMessage;
+        try {
+          const errorData = await response.json();
+          console.error("🔍 Error response:", errorData);
+          errorMessage = `Error: ${response.status} - ${errorData.error || "Unknown error"}`;
+        } catch (e) {
+          // If we can't parse the error as JSON
+          const errorText = await response.text();
+          console.error("🔍 Error text:", errorText);
+          errorMessage = `Error: ${response.status} - Unable to parse error response`;
+        }
+        throw new Error(errorMessage);
       }
       
       const data = await response.json();
+      console.log("🔍 Fetch data:", data);
       
-      if (data && data.document) {
+      // Check for our simplified API debug mode response
+      if (data.message && data.debug_info) {
+        console.log("🔍 Debug info from API route:", data.debug_info);
+        setDebugInfo(data.debug_info);
+        // Set placeholder content since we're in debug mode
+        setContent("API routes are working correctly. This is debug mode content.");
+        setTitle("Debug Mode Document");
+      } 
+      // Regular API response with document data
+      else if (data && data.document) {
         setContent(data.document.content || "");
         setTitle(data.document.title || "Untitled Document");
-      } else {
+      } 
+      // Unexpected response format
+      else {
+        console.error("🔍 Unexpected response format:", data);
         setError("Document not found or has invalid format");
       }
     } catch (error) {
-      console.error("Error fetching document:", error);
+      console.error("🔍 Error fetching document:", error);
       setError(error instanceof Error ? error.message : "Failed to load document");
     } finally {
       setLoading(false);
@@ -81,6 +127,7 @@ const Editor: FC = () => {
 
     saveTimeout.current = setTimeout(async () => {
       try {
+        console.log(`🔍 Saving document changes for ID: ${docId}`);
         const response = await fetch(`/api/documents/${docId}`, {
           method: "PUT",
           headers: {
@@ -93,10 +140,15 @@ const Editor: FC = () => {
         });
 
         if (!response.ok) {
-          console.error("Failed to update document:", await response.text());
+          console.error("🔍 Failed to update document:", response.status);
+          const errorText = await response.text();
+          console.error("🔍 Error text:", errorText);
+        } else {
+          const data = await response.json();
+          console.log("🔍 Update response:", data);
         }
       } catch (error) {
-        console.error("Error updating document:", error);
+        console.error("🔍 Error updating document:", error);
       }
     }, 1000);
   };
@@ -117,7 +169,7 @@ const Editor: FC = () => {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } catch (error) {
-      console.error("Download failed:", error);
+      console.error("🔍 Download failed:", error);
       alert("Failed to download document.");
     }
   };
@@ -140,7 +192,7 @@ const Editor: FC = () => {
       if (!loading) { // Only fetch if not already loading
         fetchDocument();
       }
-    }, 5000);
+    }, 10000); // Increased to 10 seconds to reduce API calls during debugging
     
     // Clean up on unmount
     return () => {
@@ -156,6 +208,7 @@ const Editor: FC = () => {
       <div className="container">
         <div className="card">
           <h2 className="editor-title">Loading document...</h2>
+          <p>Document ID: {docId}</p>
         </div>
       </div>
     );
@@ -167,6 +220,12 @@ const Editor: FC = () => {
         <div className="card">
           <h2 className="editor-title">Error</h2>
           <p>{error}</p>
+          {debugInfo && (
+            <div className="debug-info">
+              <h3>Debug Information</h3>
+              <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
+            </div>
+          )}
           <div className="action-buttons">
             <Link href="/" className="refresh-button">
               Go to Document List
@@ -186,6 +245,7 @@ const Editor: FC = () => {
         <div className="container">
           <div className="card">
             <h2 className="editor-title">{title || "Real-time Collaborative Editor"}</h2>
+            <p className="document-info">Document ID: {docId}</p>
             
             {/* Formatting Controls */}
             <div className="formatting-controls">
@@ -223,6 +283,14 @@ const Editor: FC = () => {
                 }}
               />
             </div>
+
+            {/* Debug Info (only shown in debug mode) */}
+            {debugInfo && (
+              <div className="debug-info">
+                <h3>Debug Information</h3>
+                <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
+              </div>
+            )}
 
             {/* Action Buttons */}
             <div className="action-buttons">
